@@ -3,6 +3,8 @@
 
 -export([init/2]).
 
-init(Req, State) ->
-    {ok, Req2} = cowboy_req:reply(200, #{<<"content-type">> => <<"text/plain; charset=utf-8">>}, <<"Hola Mundo">>, Req),
-    {ok, Req2, State}.
+init(Req0, State) ->
+    Req = cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>}, 
+    <<"<html><head><title>Hello Maifren</title></head><body><h1>Hola Mundo</h1></body></html>">>, Req0),
+    io:format("/hello~n",[]),
+    {ok, Req, State}.
