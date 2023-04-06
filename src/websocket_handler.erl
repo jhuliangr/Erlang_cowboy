@@ -1,33 +1,56 @@
 -module(websocket_handler).
 
 -export([init/2]).
--export([websocket_init/2, websocket_handle/2, websocket_info/2, handle/2, terminate/3]).
+-export([websocket_handle/2, websocket_info/2, handle/2, terminate/3]).
 
 
--record(state, {}).
+-record(state, {auth = false}).
 
 init(Req, Opts) ->
-    io:format("Iniciado Websocket~n",[]),
+    io:format("Iniciado Websocket ~n",[]),
     {cowboy_websocket, Req, Opts,#{ idle_timeout => 30000}}.
 
-websocket_init(Req0, State) ->
-    io:format("se llamo a la websocket init esta~n"),
-    case cowboy_req:parse_header(<<"sec-websocket-protocol">>, Req0) of
-        undefined ->
-            {cowboy_websocket, Req0, State};
-        Subprotocols ->
-            case lists:keymember(<<"mqtt">>, 1, Subprotocols) of
-                true ->
-                    Req = cowboy_req:set_resp_header(<<"sec-websocket-protocol">>,
-                        <<"mqtt">>, Req0),
-                    {cowboy_websocket, Req, State};
-                false ->
-                    Req = cowboy_req:reply(400, Req0),
-                    {ok, Req, State}
-            end
-    end.
+websocket_handle(Message, []) ->
+    websocket_handle(Message, #state{});
 
-websocket_handle({text, <<"close">>}, State) ->
+websocket_handle(Message, State=#state{}) ->
+    io:format("Mensaje es: ~p y el estado actual es: ~p~n", [Message, State]),
+    case Message of
+        % {auth, Username, Password} ->
+        %     case check_credentials(Username, Password) of
+        %         true ->
+        %             NewState = State#state{auth=true},
+        %             {[{text, "Completada"}], NewState};
+        %         false ->
+        %             {[{text, "Credenciales incorrectas"}], State}
+        %     end;
+        {text, <<"jhuliangr, 123">>} ->
+            case check_credentials("jhuliangr, 123") of
+                true ->
+                    NewState = State#state{auth=true},
+                    {[{text, "Completada la autenticacion"}], NewState};
+                false ->
+                    {[{text, "Credenciales incorrectas"}], State}
+                end;
+
+        {text, Message0} ->
+        case State#state.auth of
+            true ->
+                io:format("Entro aqui con ~p de message :D", [Message0]),
+                websocket_Authenticated_handle({text, Message0}, State);
+            false ->
+                {[{text, "Autenticacion requerida para continuar"}], State}
+        end
+    end;
+websocket_handle(Param1, State) ->
+    io:format("P1: ~p, P2: ~p~n", [Param1, State]),
+    {[{text, "No esta haciendo matching con la funcion"}], State}.
+
+
+
+
+
+websocket_Authenticated_handle({text, <<"close">>}, State) ->
     io:format("Cerrando websocket~n", []),
     {[
         {text, <<"Cerrada la conexion">>},
@@ -35,10 +58,10 @@ websocket_handle({text, <<"close">>}, State) ->
         {close, 1000, <<"Cerrado por peticion del cliente">>}
     ], State};
 
-websocket_handle(Frame = {text, Txt}, State) ->
+websocket_Authenticated_handle(Frame = {text, Txt}, State) ->
     io:format("Handle Llamado, frame es: ~p y state es: ~p~n", [Frame, State]),
     {[{text, <<"Su mensaje ha sido recibido con exito, Este fue: ", Txt/binary>>}], State};
-websocket_handle(_Frame, State) ->
+websocket_Authenticated_handle(_Frame, State) ->
     {ok, State}.
 
 websocket_info({log, Text}, State) ->
@@ -54,3 +77,18 @@ handle(Req, State= #state{}) ->
 terminate(_Reason, _Req, State) ->
     {stop, State}.
     
+
+
+
+
+ % function de chequeo
+check_credentials(Str) ->
+    % case (Username == "123") and (Password == "123") of
+    %     true -> true;
+    %     false -> false
+    % end.
+    case Str == "jhuliangr, 123" of
+        true -> true;
+        false -> false
+    end.
+
