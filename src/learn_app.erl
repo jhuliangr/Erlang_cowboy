@@ -16,9 +16,10 @@ start(_StartType, _StartArgs) ->
 
     Paths = [
         {"/hello", learn_http_handler, ?NO_OPTIONS}, 
-         {"/websocket", websocket_handler, ?NO_OPTIONS},
-         {"/", cowboy_static, {priv_file, learn, "static/main.html"}}, % servir archivos html
-         {"/[...]", cowboy_static, {priv_dir, learn, "static"}} % servir todo lo que este en la carpeta priv/static
+        % {"/"},
+        {"/websocket", websocket_handler, ?NO_OPTIONS},
+        {"/", cowboy_static, {priv_file, learn, "static/main.html"}}, % servir archivos html
+        {"/[...]", cowboy_static, {priv_dir, learn, "static"}} % servir todo lo que este en la carpeta priv/static
         %  {"/form", form_handler, ?NO_OPTIONS},
         %  {"/chunked_form", chunked_handler, ?NO_OPTIONS},
         %  {"/constraints/:anything", constraints_handler, {constraints_met, true}},
