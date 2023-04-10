@@ -43,6 +43,12 @@ websocket_handle(Message, State=#state{}) ->
                             false ->
                                 {[{text, "Credenciales incorrectas"}], State}
                             end;
+                    {text, <<"out">>} ->
+                        Res = [
+                            {text, <<"Cerrada la conexion">>},
+                            {close, 1000, <<"Cerrado por peticion del cliente">>}
+                        ],
+                        {Res, State};
                     _->
                         {[{text, "Autenticacion requerida para continuar"}], State}
                 end
